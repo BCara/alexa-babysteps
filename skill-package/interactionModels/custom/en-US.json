@@ -29,6 +29,63 @@
                     ]
                 },
                 {
+                    "name": "LogActivityIntent",
+                    "slots": [
+                        {
+                            "name": "cyclePhase",
+                            "type": "cyclePhase"
+                        }
+                    ],
+                    "samples": [
+                        "{cyclePhase} sleep cycle",
+                        "{cyclePhase} sleep activity"
+                    ]
+                },
+                {
+                    "name": "LogActivityDurationIntent",
+                    "slots": [
+                        {
+                            "name": "hourDuration",
+                            "type": "AMAZON.NUMBER"
+                        },
+                        {
+                            "name": "minuteDuration",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "{hourDuration} hours and {minuteDuration} minutes",
+                        "{hourDuration} hour and {minuteDuration} minutes",
+                        "{hourDuration} hour and {minuteDuration} minute",
+                        "{minuteDuration} minutes",
+                        "{minuteDuration} minute"
+                    ]
+                },
+                {
+                    "name": "ReadActivityIntent",
+                    "slots": [],
+                    "samples": [
+                        "read activity",
+                        "read"
+                    ]
+                },
+                {
+                    "name": "DeleteActivityIntent",
+                    "slots": [],
+                    "samples": [
+                        "delete",
+                        "remove"
+                    ]
+                },
+                {
+                    "name": "LogAverageActivityIntent",
+                    "slots": [],
+                    "samples": [
+                        "average",
+                        "default"
+                    ]
+                },
+                {
                     "name": "AMAZON.NavigateHomeIntent",
                     "samples": []
                 },
@@ -37,7 +94,36 @@
                   "samples": []
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "cyclePhase",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "start",
+                                "synonyms": [
+                                    "begin",
+                                    "initiate",
+                                    "start off",
+                                    "launch"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "end",
+                                "synonyms": [
+                                    "stop",
+                                    "finish",
+                                    "complete",
+                                    "finalise",
+                                    "conclude"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
         }
     }
   }
