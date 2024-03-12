@@ -410,11 +410,7 @@ const DeleteActivityIntentHandler = {
 
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-    // Assuming sessionAttributes.timestamps and sessionAttributes.cyclePhase are defined
-    const lastTimestamp = sessionAttributes.timestamps[sessionAttributes.timestamps.length - 1];
-    const hours = Math.floor(timeDifferenceInMilliseconds / (1000 * 60 * 60));
-    const remainingMilliseconds = timeDifferenceInMilliseconds % (1000 * 60 * 60);
-    const minutes = Math.floor(remainingMilliseconds / (1000 * 60));
+
     sessionAttributes.timestamps.pop();
     sessionAttributes.cyclePhase.pop();
     sessionAttributes.logType.pop();
