@@ -8,8 +8,8 @@
             "default": {
               "lambda": {
                 "arn": "arn:aws:lambda:us-east-1:082782413671:function:ask-skill-babysteps-default-default-1707976301029",
-                "lastModified": "2024-03-09T07:43:20.000+0000",
-                "revisionId": "e90fa746-ea1c-461a-919a-65026325b16b"
+                "lastModified": "2024-03-22T07:23:54.000+0000",
+                "revisionId": "e419e029-f53c-425a-9ac5-71b77ccd1ce8"
               },
               "iamRole": "arn:aws:iam::082782413671:role/ask-lambda-skill-babysteps-1707976299708"
             }
@@ -18,17 +18,17 @@
       },
       "deploymentStatus": "COMPLETE",
       "skillMetadata": {
-        "lastImportId": "amzn1.ask-package.import.e217e7e7-ba32-4662-97fd-3f738bdfbd06",
-        "lastImportTimestamp": "2024-03-05T10:15:42.648Z",
-        "lastDeployHash": "hfRl766Vgqik8Ga+I9NnUVvUhXY=",
+        "lastImportId": "amzn1.ask-package.import.53fd2a61-5450-4ceb-97bc-a1c81f91ce7a",
+        "lastImportTimestamp": "2024-03-22T07:22:01.055Z",
+        "lastDeployHash": "PprO0sfIcZfn6zMnLkIIZH7LvOo=",
         "lastDeployType": "interaction-model"
       },
       "skillId": "amzn1.ask.skill.40103e14-2ab7-426c-a3b5-add0c2934630",
       "code": {
         "default": {
-          "lastDeployHash": "3ILeqTe52p9o8g9/cURIF7G33xc="
+          "lastDeployHash": "LgvVUsK+bLUGiT590wLofrKrxQ4="
         },
-        "lastDeployTimestamp": "2024-03-09T07:43:22.080Z"
+        "lastDeployTimestamp": "2024-03-22T07:23:56.369Z"
       }
     }
   }

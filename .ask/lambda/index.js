@@ -231,12 +231,32 @@ const LogActivityIntentHandler = {
       && Alexa.getIntentName(handlerInput.requestEnvelope) === 'LogActivityIntent';
   },
   async handle(handlerInput) {
-
+    console.log("----INFO----LogActivityIntentHandler")
     var currentCyclePhase = handlerInput.requestEnvelope.request.intent.slots.cyclePhase.value;
+    var currentCycleType = handlerInput.requestEnvelope.request.intent.slots.cycleType.value;
+    var currentBottleFeedAmount = handlerInput.requestEnvelope.request.intent.slots.bottleAmount.value;
+
+    if (currentCycleType === undefined && currentBottleFeedAmount != undefined) {
+      currentCycleType = "bottle feed"
+    }
+
+    if (currentCyclePhase === undefined) {
+      currentCyclePhase = "start"
+    }
+
+    console.log("currentCyclePhase " + currentCyclePhase)
+    console.log("currentCycleType " + currentCycleType)
+    console.log("currentBottleFeedAmount " + currentBottleFeedAmount)
 
     const attributesManager = handlerInput.attributesManager;
     const attributes = await attributesManager.getPersistentAttributes() || {};
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+    let timestampsLength = 0;
+    let cyclePhaseLength = 0;
+    let speakOutput = "hi";
+
+
 
     if (currentCyclePhase.toLowerCase().includes("start")) {
       currentCyclePhase = "start";
@@ -248,57 +268,249 @@ const LogActivityIntentHandler = {
       currentCyclePhase = "start";
     }
 
-    // Get the current timestamp
     const currentTimestamp = new Date().toISOString();
 
-    // Check if there is an array in the session attributes to store timestamps
-    if (!sessionAttributes.timestamps) {
-      sessionAttributes.timestamps = [];
+    if (currentCycleType.includes("sleep")) {
+      console.log("In Sleep Cycle ")
+
+      timestampsLength = sessionAttributes.sleepTimestamps ? sessionAttributes.sleepTimestamps.length : 0;
+      cyclePhaseLength = sessionAttributes.sleepCyclePhase ? sessionAttributes.sleepCyclePhase.length : 0;
+
+      // Check if the last recorded cyclePhase is "start" and the currentCyclePhase is also "start"
+      if (
+        cyclePhaseLength > 0 &&
+        sessionAttributes.sleepCyclePhase[cyclePhaseLength - 1] === "start" &&
+        currentCyclePhase === "start"
+      ) {
+        sessionAttributes.tempCycleType = "sleep"
+        speakOutput = "You have not stopped your last session.";
+        reprompt = "How long? Delete, or set to your average time."
+        speakOutput = speakOutput + " " + reprompt
+
+        return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(reprompt)
+          .getResponse();
+      }
+
+      sessionAttributes.sleepTimestamps = sessionAttributes.sleepTimestamps || [];
+      sessionAttributes.sleepCyclePhase = sessionAttributes.sleepCyclePhase || [];
+      sessionAttributes.sleepLogType = sessionAttributes.sleepLogType || [];
+      sessionAttributes.sleepCycleType = sessionAttributes.sleepCycleType || [];
+
+      sessionAttributes.sleepTimestamps.push(currentTimestamp);
+      sessionAttributes.sleepCyclePhase.push(currentCyclePhase);
+      sessionAttributes.sleepLogType.push("Timestamp");
+      sessionAttributes.sleepCycleType.push(currentCycleType); // Now push should work
+
+      timestampsLength = sessionAttributes.sleepTimestamps.length;
+      cyclePhaseLength = sessionAttributes.sleepCyclePhase.length;
+
+      // Update speakOutput with the relevant information
+      speakOutput = "You triggered " + currentCyclePhase + " logged." + " and last logged is" + sessionAttributes.sleepCyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength
+        + ". Timestamp length is " + timestampsLength + ". Activity is logged at "
+        + sessionAttributes.sleepTimestamps[timestampsLength - 1]
+        + " Cycle Type " + currentCycleType;
+
+    } else if (currentCycleType.includes("breast")) {
+      console.log("In Breast Feed ")
+
+      timestampsLength = sessionAttributes.breastFeedTimestamps ? sessionAttributes.breastFeedTimestamps.length : 0;
+      cyclePhaseLength = sessionAttributes.breastFeedCyclePhase ? sessionAttributes.breastFeedCyclePhase.length : 0;
+
+      // Check if the last recorded cyclePhase is "start" and the currentCyclePhase is also "start"
+      if (
+        cyclePhaseLength > 0 &&
+        sessionAttributes.breastFeedCyclePhase[cyclePhaseLength - 1] === "start" &&
+        currentCyclePhase === "start"
+      ) {
+        sessionAttributes.tempCycleType = "breast feed"
+        speakOutput = "You have not stopped your last session.";
+        reprompt = "How long? Delete, or set to your average time."
+        speakOutput = speakOutput + " " + reprompt
+
+        return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(reprompt)
+          .getResponse();
+      }
+      sessionAttributes.breastFeedTimestamps = sessionAttributes.breastFeedTimestamps || [];
+      sessionAttributes.breastFeedCyclePhase = sessionAttributes.breastFeedCyclePhase || [];
+      sessionAttributes.breastFeedLogType = sessionAttributes.breastFeedLogType || [];
+      sessionAttributes.breastFeedCycleType = sessionAttributes.breastFeedCycleType || [];
+
+      sessionAttributes.breastFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.breastFeedCyclePhase.push(currentCyclePhase);
+      sessionAttributes.breastFeedLogType.push("Timestamp");
+      sessionAttributes.breastFeedCycleType.push(currentCycleType); // Now push should work
+
+      timestampsLength = sessionAttributes.breastFeedTimestamps.length;
+      cyclePhaseLength = sessionAttributes.breastFeedCyclePhase.length;
+
+      // Update speakOutput with the relevant information
+      speakOutput = "You triggered Breast Feed" + currentCyclePhase + " logged." + " and last logged is" + sessionAttributes.breastFeedCyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength
+        + ". Timestamp length is " + timestampsLength + ". Activity is logged at "
+        + sessionAttributes.breastFeedTimestamps[timestampsLength - 1]
+        + " Cycle Type " + currentCycleType;
+
+    } else if (currentCycleType.includes("bottle")) {
+      console.log("Bottle Feed ")
+
+      timestampsLength = sessionAttributes.bottleFeedTimestamps ? sessionAttributes.bottleFeedTimestamps.length : 0;
+      cyclePhaseLength = sessionAttributes.bottleFeedCyclePhase ? sessionAttributes.bottleFeedCyclePhase.length : 0;
+
+      // Check if the last recorded cyclePhase is "start" and the currentCyclePhase is also "start"
+
+      sessionAttributes.bottleFeedTimestamps = sessionAttributes.bottleFeedTimestamps || [];
+      sessionAttributes.bottleFeedAmount = sessionAttributes.bottleFeedAmount || [];
+      sessionAttributes.bottleFeedLogType = sessionAttributes.bottleFeedLogType || [];
+
+
+
+      // Update speakOutput with the relevant information
+      if (currentBottleFeedAmount != undefined) {
+        speakOutput = "You have logged a Bottle Feed with amount " + currentBottleFeedAmount
+        sessionAttributes.bottleFeedTimestamps.push(currentTimestamp);
+        sessionAttributes.bottleFeedAmount.push(currentBottleFeedAmount);
+        sessionAttributes.bottleFeedLogType.push("Log Activity");
+  
+        timestampsLength = sessionAttributes.bottleFeedAmount.length;
+        cyclePhaseLength = sessionAttributes.bottleFeedCyclePhase.length;
+      } else {
+
+        speakOutput = "You have logged a Bottle Feed but not specified an amount"
+        reprompt = "Say the amount or do you want to finish logging later"
+        speakOutput = speakOutput + reprompt
+
+        sessionAttributes.substate = 2 //Bottle Feed Clarification Required
+
+        return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(reprompt)
+          .getResponse();
+      }
+
+
+
+      //If feed type is not specified
+    } else if (currentCycleType.includes("feed") && !currentCycleType.includes("bottle") && !currentCycleType.includes("breast")) {
+      sessionAttributes.defaultFeed = sessionAttributes.defaultFeed || [];
+      const defaultFeed = sessionAttributes.defaultFeed
+      if (defaultFeed.includes("breast")) {
+        console.log("Default Feed = Breast")
+        sessionAttributes.breastFeedTimestamps = sessionAttributes.breastFeedTimestamps || [];
+        sessionAttributes.breastFeedCyclePhase = sessionAttributes.breastFeedCyclePhase || [];
+        sessionAttributes.breastFeedLogType = sessionAttributes.breastFeedLogType || [];
+        sessionAttributes.breastFeedCycleType = sessionAttributes.breastFeedCycleType || [];
+
+        sessionAttributes.breastFeedTimestamps.push(currentTimestamp);
+        sessionAttributes.breastFeedCyclePhase.push(currentCyclePhase);
+        sessionAttributes.breastFeedLogType.push("Timestamp");
+        sessionAttributes.breastFeedCycleType.push(currentCycleType); // Now push should work
+
+        timestampsLength = sessionAttributes.breastFeedTimestamps.length;
+        cyclePhaseLength = sessionAttributes.breastFeedCyclePhase.length;
+        // Update speakOutput with the relevant information
+        speakOutput = "You triggered Breast Feed" + currentCyclePhase + " logged." + " and last logged is" + sessionAttributes.breastFeedCyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength
+          + ". Timestamp length is " + timestampsLength + ". Activity is logged at "
+          + sessionAttributes.breastFeedTimestamps[timestampsLength - 1]
+          + " Cycle Type " + currentCycleType;
+
+      } else if (defaultFeed.includes("bottle")) {
+        sessionAttributes.bottleFeedAmount = sessionAttributes.bottleFeedAmount || [];
+        sessionAttributes.bottleFeedLogType = sessionAttributes.bottleFeedLogType || [];
+        sessionAttributes.bottleFeedCycleType = sessionAttributes.bottleFeedCycleType || [];
+
+        // Update speakOutput with the relevant information
+      if (currentBottleFeedAmount != undefined) {
+        speakOutput = "You have logged a Bottle Feed with amount " + currentBottleFeedAmount
+        sessionAttributes.bottleFeedTimestamps.push(currentTimestamp);
+        sessionAttributes.bottleFeedAmount.push(currentBottleFeedAmount);
+        sessionAttributes.bottleFeedLogType.push("Log Activity");
+  
+        timestampsLength = sessionAttributes.bottleFeedAmount.length;
+        cyclePhaseLength = sessionAttributes.bottleFeedCyclePhase.length;
+      } else {
+        speakOutput = "You have logged a Bottle Feed but not specified an amount"
+        reprompt = " Say the amount or do you want to finish logging later"
+        speakOutput = speakOutput + reprompt
+        return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(reprompt)
+          .getResponse();
+      }
+      } else {
+
+        sessionAttributes.tempCyclePhase = currentCyclePhase
+        speakOutput = "What type of feed is this?";
+        reprompt = "Is this a breast feed or a bottle feed?"
+        speakOutput = speakOutput + " " + reprompt
+
+        return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(reprompt)
+          .getResponse();
+      }
     }
-    if (!sessionAttributes.cyclePhase) {
-      sessionAttributes.cyclePhase = [];
-    }
-    if (!sessionAttributes.logType) {
-      sessionAttributes.logType = [];
-    }
-
-    const timestampsLength = sessionAttributes.timestamps.length;
-    const cyclePhaseLength = sessionAttributes.cyclePhase.length;
 
 
-    // Check if the last recorded cyclePhase is "start" and the currentCyclePhase is also "start"
-    if (
-      cyclePhaseLength > 0 &&
-      sessionAttributes.cyclePhase[cyclePhaseLength - 1] === "start" &&
-      currentCyclePhase === "start"
-    ) {
-      speakOutput = "You have not stopped your last session.";
-      reprompt = "How long? Delete, or set to your average time."
-      speakOutput = speakOutput + " " + reprompt
 
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+      .getResponse();
+  }
+};
+
+const ClarifyBottleAmountIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && Alexa.getIntentName(handlerInput.requestEnvelope) === 'ClarifyBottleAmountIntent';
+  },
+  async handle(handlerInput) {
+
+    const attributesManager = handlerInput.attributesManager;
+    const attributes = await attributesManager.getPersistentAttributes() || {};
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+    var currentBottleFeedAmount = handlerInput.requestEnvelope.request.intent.slots.bottleAmount.value;
+
+    timestampsLength = sessionAttributes.bottleFeedTimestamps ? sessionAttributes.bottleFeedTimestamps.length : 0;
+
+    const currentTimestamp = new Date().toISOString();
+
+
+    sessionAttributes.bottleFeedTimestamps = sessionAttributes.bottleFeedTimestamps || [];
+    sessionAttributes.bottleFeedAmount = sessionAttributes.bottleFeedAmount || [];
+    sessionAttributes.bottleFeedLogType = sessionAttributes.bottleFeedLogType || [];
+
+    // Update speakOutput with the relevant information
+    if (currentBottleFeedAmount != undefined) {
+
+      speakOutput = "You have logged a Bottle Feed with amount " + currentBottleFeedAmount
+      sessionAttributes.bottleFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.bottleFeedAmount.push(currentBottleFeedAmount);
+      sessionAttributes.bottleFeedLogType.push("Log Activity");
+
+      timestampsLength = sessionAttributes.bottleFeedAmount.length;
+      cyclePhaseLength = sessionAttributes.bottleFeedCyclePhase.length;
+    } else {
+      speakOutput = "You have logged a Bottle Feed but not specified an amount"
+      reprompt = "Say the amount or do you want to finish logging later"
+      speakOutput = speakOutput + reprompt
       return handlerInput.responseBuilder
         .speak(speakOutput)
         .reprompt(reprompt)
         .getResponse();
-
-    } else {
-      // Add the current timestamp and cyclePhase to the arrays
-      sessionAttributes.timestamps.push(currentTimestamp);
-      sessionAttributes.cyclePhase.push(currentCyclePhase);
-      sessionAttributes.logType.push("Timestamp");
-
-
-      // Update speakOutput with the relevant information
-      speakOutput = "You triggered " + currentCyclePhase + " logged." + " and last logged is" + sessionAttributes.cyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength + ". Timestamp length is " + timestampsLength + ". Activity is logged at " + sessionAttributes.timestamps[timestampsLength - 1];
-
-      return handlerInput.responseBuilder
-        .speak(speakOutput)
-        //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
-        .getResponse();
     }
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+      .getResponse();
+
   }
 };
-
 const LogActivityDurationIntentHandler = {
   canHandle(handlerInput) {
     return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
@@ -315,10 +527,10 @@ const LogActivityDurationIntentHandler = {
     const attributes = await attributesManager.getPersistentAttributes() || {};
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-    const timestampsLength = sessionAttributes.timestamps.length;
-    const cyclePhaseLength = sessionAttributes.cyclePhase.length;
+    const timestampsLength = sessionAttributes.sleepTimestamps.length;
+    const cyclePhaseLength = sessionAttributes.sleepCyclePhase.length;
 
-    const lastTimestamp = sessionAttributes.timestamps[timestampsLength - 1]
+    const lastTimestamp = sessionAttributes.sleepTimestamps[timestampsLength - 1]
 
     const lastTimestampDate = new Date(lastTimestamp);
 
@@ -329,9 +541,9 @@ const LogActivityDurationIntentHandler = {
     // Convert the modified Date object back to the desired format
     const updatedTimestamp = lastTimestampDate.toISOString();
 
-    sessionAttributes.timestamps.push(updatedTimestamp);
-    sessionAttributes.cyclePhase.push(currentCyclePhase);
-    sessionAttributes.logType.push("Duration");
+    sessionAttributes.sleepTimestamps.push(updatedTimestamp);
+    sessionAttributes.sleepCyclePhase.push(currentCyclePhase);
+    sessionAttributes.sleepLogType.push("Duration");
 
 
 
@@ -411,31 +623,197 @@ const DeleteActivityIntentHandler = {
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
 
-    sessionAttributes.timestamps.pop();
-    sessionAttributes.cyclePhase.pop();
-    sessionAttributes.logType.pop();
+
+    if (sessionAttributes.tempCycleType = "sleep") {
+      // Check if there is an array in the session attributes to store timestamps
+      if (!sessionAttributes.sleepTimestamps) {
+        sessionAttributes.sleepTimestamps = [];
+      }
+      if (!sessionAttributes.sleepCyclePhase) {
+        sessionAttributes.sleepCyclePhase = [];
+      }
+      if (!sessionAttributes.sleepLogType) {
+        sessionAttributes.sleepLogType = [];
+      }
+      sessionAttributes.sleepTimestamps.pop();
+      sessionAttributes.sleepCyclePhase.pop();
+      sessionAttributes.sleepLogType.pop();
+
+      // Get the current timestamp
+      const currentTimestamp = new Date().toISOString();
+
+
+
+      // Add the current timestamp and cyclePhase to the arrays
+      sessionAttributes.sleepTimestamps.push(currentTimestamp);
+      sessionAttributes.sleepCyclePhase.push("start");
+      sessionAttributes.sleepLogType.push("Timestamp")
+    }
+
+    if (sessionAttributes.tempCycleType = "bottle feed") {
+      // Check if there is an array in the session attributes to store timestamps
+      if (!sessionAttributes.bottleFeedTimestamps) {
+        sessionAttributes.bottleFeedTimestamps = [];
+      }
+      if (!sessionAttributes.bottleFeedCyclePhase) {
+        sessionAttributes.bottleFeedCyclePhase = [];
+      }
+      if (!sessionAttributes.bottleFeedLogType) {
+        sessionAttributes.bottleFeedLogType = [];
+      }
+      sessionAttributes.bottleFeedTimestamps.pop();
+      sessionAttributes.bottleFeedCyclePhase.pop();
+      sessionAttributes.bottleFeedLogType.pop();
+
+      // Get the current timestamp
+      const currentTimestamp = new Date().toISOString();
+
+
+      // Add the current timestamp and cyclePhase to the arrays
+      sessionAttributes.bottleFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.bottleFeedCyclePhase.push("start");
+      sessionAttributes.bottleFeedLogType.push("Timestamp")
+    }
+
+    if (sessionAttributes.tempCycleType = "breast feed") {
+      // Check if there is an array in the session attributes to store timestamps
+      if (!sessionAttributes.breastFeedTimestamps) {
+        sessionAttributes.breastFeedTimestamps = [];
+      }
+      if (!sessionAttributes.breastFeedCyclePhase) {
+        sessionAttributes.breastFeedCyclePhase = [];
+      }
+      if (!sessionAttributes.breastFeedLogType) {
+        sessionAttributes.breastFeedLogType = [];
+      }
+      sessionAttributes.breastFeedTimestamps.pop();
+      sessionAttributes.breastFeedCyclePhase.pop();
+      sessionAttributes.breastFeedLogType.pop();
+
+      // Get the current timestamp
+      const currentTimestamp = new Date().toISOString();
+
+
+
+      // Add the current timestamp and cyclePhase to the arrays
+      sessionAttributes.breastFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.breastFeedCyclePhase.push("start");
+      sessionAttributes.breastFeedLogType.push("Timestamp")
+    }
+
+    let speakOutput = "The last " + sessionAttributes.tempCycleType + "cycle was deleted and a new cycle is logged";
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+      .getResponse();
+  }
+};
+
+const FeedActivityClarifyIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && Alexa.getIntentName(handlerInput.requestEnvelope) === 'FeedActivityClarifyIntent';
+  },
+  async handle(handlerInput) {
+    console.log("----INFO INTENT---- FeedActivityClarifyIntentHandler")
+
+    var feedType = handlerInput.requestEnvelope.request.intent.slots.feedType.value;
+    var currentBottleFeedAmount = handlerInput.requestEnvelope.request.intent.slots.bottleAmount.value;
+    console.log("----INFO---- Feed Type " + feedType)
+
+    const attributesManager = handlerInput.attributesManager;
+
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    let speakOutput = ""
 
     // Get the current timestamp
     const currentTimestamp = new Date().toISOString();
 
-    // Check if there is an array in the session attributes to store timestamps
-    if (!sessionAttributes.timestamps) {
-      sessionAttributes.timestamps = [];
-    }
-    if (!sessionAttributes.cyclePhase) {
-      sessionAttributes.cyclePhase = [];
-    }
-    if (!sessionAttributes.logType) {
-      sessionAttributes.logType = [];
+    if (feedType.includes("breast")) {
+
+      timestampsLength = sessionAttributes.breastFeedTimestamps ? sessionAttributes.breastFeedTimestamps.length : 0;
+      cyclePhaseLength = sessionAttributes.breastFeedCyclePhase ? sessionAttributes.breastFeedCyclePhase.length : 0;
+
+      // Check if the last recorded cyclePhase is "start" and the currentCyclePhase is also "start"
+      if (
+        cyclePhaseLength > 0 &&
+        sessionAttributes.breastFeedCyclePhase[cyclePhaseLength - 1] === "start" &&
+        sessionAttributes.tempCyclePhase === "start"
+      ) {
+        speakOutput = "You have not stopped your last session.";
+        reprompt = "How long? Delete, or set to your average time."
+        speakOutput = speakOutput + " " + reprompt
+
+        return handlerInput.responseBuilder
+          .speak(speakOutput)
+          .reprompt(reprompt)
+          .getResponse();
+      }
+      sessionAttributes.breastFeedTimestamps = sessionAttributes.breastFeedTimestamps || [];
+      sessionAttributes.breastFeedCyclePhase = sessionAttributes.breastFeedCyclePhase || [];
+      sessionAttributes.breastFeedLogType = sessionAttributes.breastFeedLogType || [];
+      sessionAttributes.breastFeedCycleType = sessionAttributes.breastFeedCycleType || [];
+
+      sessionAttributes.breastFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.breastFeedCyclePhase.push(sessionAttributes.tempCyclePhase);
+      sessionAttributes.breastFeedLogType.push("Timestamp");
+      sessionAttributes.breastFeedCycleType.push("breast feed");
+      sessionAttributes.tempFeedType = "breast feed"
+
+      timestampsLength = sessionAttributes.breastFeedTimestamps.length;
+      cyclePhaseLength = sessionAttributes.breastFeedCyclePhase.length;
+
+      // Update speakOutput with the relevant information
+      speakOutput = "You triggered Breast Feed" + sessionAttributes.tempCyclePhase + " logged." + " and last logged is" + sessionAttributes.breastFeedCyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength
+        + ". Timestamp length is " + timestampsLength + ". Activity is logged at "
+        + sessionAttributes.breastFeedTimestamps[timestampsLength - 1]
+        + " Cycle Type breast feed";
+
+    } else if (feedType.includes("bottle")) {
+      sessionAttributes.bottleFeedAmount = sessionAttributes.bottleFeedAmount || [];
+      sessionAttributes.bottleFeedLogType = sessionAttributes.bottleFeedLogType || [];
+      sessionAttributes.bottleFeedCycleType = sessionAttributes.bottleFeedCycleType || [];
+
+      // Update speakOutput with the relevant information
+    if (currentBottleFeedAmount != undefined) {
+      speakOutput = "You have logged a Bottle Feed with amount " + currentBottleFeedAmount
+      sessionAttributes.bottleFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.bottleFeedAmount.push(currentBottleFeedAmount);
+      sessionAttributes.bottleFeedLogType.push("Log Activity");
+
+      timestampsLength = sessionAttributes.bottleFeedAmount.length;
+      cyclePhaseLength = sessionAttributes.bottleFeedCyclePhase.length;
+    } else {
+      speakOutput = "You have logged a Bottle Feed but not specified an amount"
+      reprompt = " Say the amount or do you want to finish logging later"
+      speakOutput = speakOutput + reprompt
+      return handlerInput.responseBuilder
+        .speak(speakOutput)
+        .reprompt(reprompt)
+        .getResponse();
     }
 
-    // Add the current timestamp and cyclePhase to the arrays
-    sessionAttributes.timestamps.push(currentTimestamp);
-    sessionAttributes.cyclePhase.push("start");
-    sessionAttributes.logType.push("Timestamp")
+
+    }
+
+    
+ defaultFeed = sessionAttributes.defaultFeed
+    if (!sessionAttributes.defaultFeed || !defaultFeed.includes("breast") || !defaultFeed.includes("bottle")) {
+
+      reprompt = "It seems you haven't set a default feed type. Would you like to set " + feedType + " as your default??"
+      speakOutput = speakOutput + reprompt;
+
+      return handlerInput.responseBuilder
+        .speak(speakOutput)
+        .reprompt(reprompt)
+        .getResponse();
+
+    }
+    sessionAttributes.tempFeedType = feedType
+    sessionAttributes.substate = 1 //Substate 1 is default feed
 
 
-    let speakOutput = "The last one was deleted and a new cycle is logged";
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
@@ -458,7 +836,7 @@ const LogAverageActivityIntentHandler = {
 
 
     // Extract "start" and "stop" pairs and calculate sleep time
-    const sleepTimes = [];
+    const sleepTimes = [];LaterInt
     for (let i = 0; i < sessionAttributes.cyclePhase.length - 1; i++) {
       if (sessionAttributes.cyclePhase[i] === "start" && sessionAttributes.cyclePhase[i + 1] === "stop") {
 
@@ -506,6 +884,181 @@ const HelpIntentHandler = {
     return handlerInput.responseBuilder
       .speak(speakOutput)
       .reprompt(speakOutput)
+      .getResponse();
+  }
+};
+
+const defaultFeedIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'defaultFeedIntent');
+  },
+  handle(handlerInput) {
+    console.log("----INFO INTENT---- defaultFeedHandler")
+
+    var feedType = handlerInput.requestEnvelope.request.intent.slots.feedType.value;
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+    sessionAttributes.defaultFeed = feedType
+    const speakOutput = "Ok your default feed type has been stored as " + feedType;
+
+    sessionAttributes.tempFeedType = ""
+    sessionAttributes.substate = 0 //Substate 0 Reset
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+      .getResponse();
+
+  }
+};
+
+
+//Used for bottle feed to allow to log the amount later   
+const LaterIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'LaterIntent');
+  }, 
+  handle(handlerInput) {
+    console.log("----INFO INTENT---- laterFeedHandler")
+
+    const substate = sessionAttributes.substate 
+    if (substate = 2) {
+
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    const speakOutput = "Ok,  you can continue to log items later";
+
+    const currentTimestamp = new Date().toISOString();
+
+    sessionAttributes.bottleFeedTimestamps.push(currentTimestamp);
+    sessionAttributes.bottleFeedAmount.push("later");
+    sessionAttributes.bottleFeedLogType.push("Log Activity");
+
+    sessionAttributes.substate = 0 //Substate 0 Reset
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      .getResponse();
+
+    } else { //Catch an error
+      speakOutput = "I'm sorry I didn't quite understand what can I help you with"
+      return handlerInput.responseBuilder
+      .speak(speakOutput)
+      .reprompt(speakOutput)
+      .getResponse();
+    }
+
+
+  }
+};
+
+
+
+const YesIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.YesIntent');
+  },
+  handle(handlerInput) {
+    console.log("----INFO INTENT---- YesIntentHandler")
+
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+    tempDefaultFeedType = sessionAttributes.tempFeedType
+    sessionAttributes.defaultFeed = tempDefaultFeedType
+    console.log("----INFO ---- tempDefaultFeedType" + tempDefaultFeedType)
+    const speakOutput = "Ok your default feed type has been stored as " + tempDefaultFeedType;
+
+    sessionAttributes.tempFeedType = ""
+    sessionAttributes.substate = 0 //Substate 0 Reset
+
+    // Get the current timestamp
+    const currentTimestamp = new Date().toISOString();
+
+
+    if (tempDefaultFeedType.includes("breast")) {
+
+      timestampsLength = sessionAttributes.breastFeedTimestamps ? sessionAttributes.breastFeedTimestamps.length : 0;
+      cyclePhaseLength = sessionAttributes.breastFeedCyclePhase ? sessionAttributes.breastFeedCyclePhase.length : 0;
+
+      // Check if the last recorded cyclePhase is "start" and the currentCyclePhase is also "start"
+
+      sessionAttributes.breastFeedTimestamps = sessionAttributes.breastFeedTimestamps || [];
+      sessionAttributes.breastFeedCyclePhase = sessionAttributes.breastFeedCyclePhase || [];
+      sessionAttributes.breastFeedLogType = sessionAttributes.breastFeedLogType || [];
+      sessionAttributes.breastFeedCycleType = sessionAttributes.breastFeedCycleType || [];
+
+      sessionAttributes.breastFeedTimestamps.push(currentTimestamp);
+      sessionAttributes.breastFeedCyclePhase.push(sessionAttributes.tempCyclePhase);
+      sessionAttributes.breastFeedLogType.push("Timestamp");
+      sessionAttributes.breastFeedCycleType.push("breast feed");
+
+
+      // Update speakOutput with the relevant information
+      speakOutput = speakOutput + "You triggered Breast Feed" + sessionAttributes.tempCyclePhase + " logged." + " and last logged is" + sessionAttributes.breastFeedCyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength
+        + ". Timestamp length is " + timestampsLength + ". Activity is logged at "
+        + sessionAttributes.breastFeedTimestamps[timestampsLength - 1]
+        + " Cycle Type breast feed";
+
+    } else if (tempDefaultFeedType.includes("bottle")) {
+
+      timestampsLength = sessionAttributes.bottleFeedTimestamps ? sessionAttributes.bottleFeedTimestamps.length : 0;
+      cyclePhaseLength = sessionAttributes.bottleFeedCyclePhase ? sessionAttributes.bottleFeedCyclePhase.length : 0;
+
+      sessionAttributes.bottleFeedAmount = sessionAttributes.bottleFeedAmount || [];
+      sessionAttributes.bottleFeedCyclePhase = sessionAttributes.bottleFeedCyclePhase || [];
+      sessionAttributes.bottleFeedLogType = sessionAttributes.bottleFeedLogType || [];
+      sessionAttributes.bottleFeedCycleType = sessionAttributes.bottleFeedCycleType || [];
+
+      sessionAttributes.bottleFeedAmount.push(currentBottleFeedAmount);
+      sessionAttributes.bottleFeedCyclePhase.push(sessionAttributes.tempCyclePhase);
+      sessionAttributes.bottleFeedLogType.push("Timestamp");
+      sessionAttributes.bottleFeedCycleType.push("bottle feed"); // Now push should work
+
+      // Update speakOutput with the relevant information
+      speakOutput = speakOutput + "You triggered Bottle Feed" + sessionAttributes.tempCyclePhase + " logged." + " and last logged is" + sessionAttributes.bottleFeedCyclePhase[cyclePhaseLength - 1] + "Cycle phase length is " + cyclePhaseLength
+        + ". Timestamp length is " + timestampsLength + ". Activity is logged at "
+        + sessionAttributes.bottleFeedTimestamps[timestampsLength - 1]
+        + " Cycle Type bottle feed";
+    }
+
+    sessionAttributes.tempFeedType = ""
+    sessionAttributes.substate = 0 //Substate 0 is reset
+
+
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
+      //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+      .getResponse();
+
+  }
+};
+
+const NoIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.NoIntent');
+  },
+  handle(handlerInput) {
+
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+    const speakOutput = "Ok your default feed type has not been stored";
+
+    sessionAttributes.tempFeedType = ""
+    sessionAttributes.substate = 0 //Substate 0 Reset
+
+
+
+    // Assuming sessionAttributes.timestamps and sessionAttributes.cyclePhase are defined
+    const lastTimestampString = sessionAttributes.timestamps[sessionAttributes.timestamps.length - 1];
+
+
+
+    return handlerInput.responseBuilder
+      .speak(speakOutput)
       .getResponse();
   }
 };
@@ -606,11 +1159,18 @@ exports.handler = function (event, context) {
   let factory = Alex.SkillBuilders.standard()
     .addRequestHandlers(
       LaunchRequestHandler,
+      FeedActivityClarifyIntentHandler,
       LogActivityIntentHandler,
       LogActivityDurationIntentHandler,
       ReadActivityIntentHandler,
       DeleteActivityIntentHandler,
       LogAverageActivityIntentHandler,
+      defaultFeedIntentHandler,
+      ClarifyBottleAmountIntentHandler,
+      
+      LaterIntentHandler,
+      YesIntentHandler,
+      NoIntentHandler,
       HelpIntentHandler,
       CancelAndStopIntentHandler,
       FallbackIntentHandler,

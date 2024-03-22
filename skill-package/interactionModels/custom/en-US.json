@@ -29,16 +29,75 @@
                     ]
                 },
                 {
+                    "name": "FeedActivityClarifyIntent",
+                    "slots": [
+                        {
+                            "name": "feedType",
+                            "type": "feedType"
+                        },
+                        {
+                            "name": "bottleAmount",
+                            "type": "AMAZON.NUMBER"
+                        }
+
+                    ],
+                    "samples": [
+                        "{feedType}",
+                        "it is a {feedType}",
+                        "a {feedType}",
+                        "a {feedType} with {bottleAmount}"
+
+                    ]
+                },
+                {
                     "name": "LogActivityIntent",
                     "slots": [
                         {
                             "name": "cyclePhase",
                             "type": "cyclePhase"
+                        },
+                        {
+                            "name": "cycleType",
+                            "type": "cycleType"
+
+                        },
+                        {
+                            "name": "bottleAmount",
+                            "type": "AMAZON.NUMBER"
                         }
                     ],
                     "samples": [
-                        "{cyclePhase} sleep cycle",
-                        "{cyclePhase} sleep activity"
+                        "{cyclePhase} {cycleType} cycle",
+                        "{cyclePhase} {cycleType} activity",
+                        "{cycleType} activity {cyclePhase}",
+                        "{cycleType} activity {cyclePhase}",
+                        "to {cyclePhase} {cycleType}",
+                        "log {cycleType}",
+                        "log {bottleAmount} for a {cycleType}",
+                        "log {bottleAmount}"
+                    ]
+                },
+                {
+                    "name": "ClarifyBottleAmountIntent",
+                    "slots": [
+
+                        {
+                            "name": "bottleAmount",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "{bottleAmount}"
+                    ]
+                },
+                {
+                    "name": "LaterIntent",
+                    "slots": [
+
+                    ],
+                    "samples": [
+                        "later",
+                        "not right now"
                     ]
                 },
                 {
@@ -86,6 +145,34 @@
                     ]
                 },
                 {
+                    "name": "defaultFeedIntent",
+                    "slots": [
+                        {
+                            "name": "feedType",
+                            "type": "feedType"
+                        }
+                    ],
+                    "samples": [
+                        "Set default feed to {feedType}",
+                        "set my default feed to {feedType}",
+                        "my usual feed type is {feedType}",
+                        "i usually {feedType} feed",
+                        "the default feed is {feedType}",
+                        "the default is {feedType}",
+                        "default is {feedType}",
+                        "i usually {feedType}"
+                    ]
+                },
+                {
+                    "name": "AMAZON.YesIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NoIntent",
+                    "samples": []
+                },
+                
+                {
                     "name": "AMAZON.NavigateHomeIntent",
                     "samples": []
                 },
@@ -118,6 +205,69 @@
                                     "complete",
                                     "finalise",
                                     "conclude"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "cycleType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "sleep",
+                                "synonyms": [
+                                    "nap",
+                                    "napping",
+                                    "snooze",
+                                    "snoozing"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "feed",
+                                "synonyms": [
+                                    "feeding"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "breast feed",
+                                "synonyms": [
+                                    "breast"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "bottle feed",
+                                "synonyms": [
+                                    "bottle"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "feedType",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "breast feed",
+                                "synonyms": [
+                                    "breast"
+
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "bottle feed",
+                                "synonyms": [
+                                    "bottle"
+
                                 ]
                             }
                         }
